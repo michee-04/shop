@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/michee/e-commerce/database"
 	"github.com/michee/e-commerce/utils"
 	"gorm.io/gorm"
@@ -14,24 +15,23 @@ var Db *gorm.DB
 
 type User struct {
 	UserId            string    `gorm:"primary_key;column:user_id"`
+	Name              string    `gorm:"column:name" json:"name"`
 	Username          string    `gorm:"column:username" json:"username"`
 	Email             string    `gorm:"unique:column:email" json:"email"`
 	EmailVerified     bool      `gorm:"column:email_verified" json:"email_verified"`
 	Password          string    `gorm:"column:password" json:"password"`
-	Token             string    `gorm:"column:token" json:"token"`
+	IsAdmin           bool      `gorm:"column:is_admin" json:"is_admin"`
+	TokenJwt             string    `gorm:"column:token_jwt" json:"token_jwt"`
 	VerificationToken string    `gorm:"column:verification_token" json:"verification_token"`
+	TokenPassword     string    `gorm:"column:token_password" json:"token_password"`
 	ResetTokenExpiry  time.Time `gorm:"column:reset_token_expiry" json:"reset_token_expiry"`
 }
 
-// func (u *User) HexaDeximalId(tx *gorm.DB) (err error) {
-// 	u.UserId = uuid.New().String()
-// 	return
-// }
 
 func init() {
 	database.ConnectDB()
 	Db = database.GetDB()
-
+	// Db.Migrator().DropTable(&User{})
 	if Db != nil {
 		err := Db.AutoMigrate(&User{})
 		if err != nil {
@@ -42,9 +42,13 @@ func init() {
 	}
 }
 
+
 func (u *User) CreateUser() *User {
+	u.UserId = uuid.New().String()
 	hashedPassword, _ := utils.HashPassword(u.Password)
+	emailToken := utils.GenerateVerificationToken()
 	u.Password = hashedPassword
+	u.VerificationToken = emailToken
 	Db.Create(u)
 	return u
 }
@@ -83,7 +87,7 @@ func DeleteUser(Id string) User {
 }
 
 func (u *User) Logout() error {
-	u.Token = ""
+	u.TokenJwt = ""
 	return Db.Save(&u).Error
 }
 
@@ -99,14 +103,8 @@ func (u *User) Verify() error {
 	u.EmailVerified = true
 	u.VerificationToken = ""
 	if err := Db.Save(&u).Error; err != nil {
-		return fmt.Errorf("Unable to verify user")
+		return fmt.Errorf("unable to verify user")
 	}
 
 	return nil
 }
-
-
-func (u *User) CanLogin() bool{
-	return u.EmailVerified
-}
-

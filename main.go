@@ -11,13 +11,13 @@ import (
 )
 
 
-const port = ":8080"
+const Port = ":8080"
 
 
 var tokenAuth *jwtauth.JWTAuth
 
 func main() {
-	// tokenAuth = jwtauth.New("HS256", []byte("ksQD5adHXZ-5SSJCupcHwBzDi6q5kfr5hdU7Eq5tMmo"), nil)
+	tokenAuth = jwtauth.New("HS256", []byte("ksQD5adHXZ-5SSJCupcHwBzDi6q5kfr5hdU7Eq5tMmo"), nil)
 
 	r := chi.NewRouter()
 
@@ -27,24 +27,27 @@ func main() {
 
 	r.Route("/auth", func(r chi.Router) {
 		r.Post("/register", controller.CreateUser)
+		r.Get("/verify", controller.VerifyHandler)
+		r.Post("/login", controller.LoginHandler)
 		
 	})
 
 	r.Route("/user", func(r chi.Router) {
-		// r.Use(jwtauth.Verifier(tokenAuth))
-		// r.Use(jwtauth.Authenticator(tokenAuth))
+		r.Use(jwtauth.Verifier(tokenAuth))
+		r.Use(jwtauth.Authenticator(tokenAuth))
 
 		r.Get("/", controller.GetUser)
 
 		r.Route("/{userId}", func(r chi.Router) {
+			r.Post("/", controller.LogoutUser)
 			r.Get("/", controller.GetUserById)
 			r.Patch("/", controller.UpddateUser)
 			r.Delete("/", controller.DeleteUser)
 		})
 	})
 
-	fmt.Printf("le serveur fonctionne sur http://localhost%s", port)
+	fmt.Printf("le serveur fonctionne sur http://localhost%s", Port)
 
 
-	http.ListenAndServe(port, r)
+	http.ListenAndServe(Port, r)
 }

@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"crypto/rand"
+	"encoding/base64"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -34,4 +36,10 @@ func CheckPassordHash(p, h string) bool{
 	err := bcrypt.CompareHashAndPassword([]byte(h), []byte(p))
 
 	return err == nil
+}
+
+func GenerateVerificationToken() string {
+	b := make([]byte, 32)
+	rand.Read(b)
+	return base64.URLEncoding.EncodeToString(b)
 }

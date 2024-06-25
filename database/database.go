@@ -2,7 +2,9 @@ package database
 
 import (
 	"log"
+	"os"
 
+	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -13,7 +15,14 @@ var (
 
 
 func ConnectDB() {
-	dsn := "postgresql://shopdb_owner:TZOEtPp4N1uj@ep-steep-moon-a5sk29u2.us-east-2.aws.neon.tech/shopdb?sslmode=require"
+
+	err := godotenv.Load()
+
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+	
+	dsn := os.Getenv("DATABASE_URL")
 	Connect, err := gorm.Open(postgres.Open(dsn)) 
 
 	if err != nil {
