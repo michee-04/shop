@@ -29,7 +29,9 @@ func main() {
 		r.Post("/register", controller.CreateUser)
 		r.Get("/verify", controller.VerifyHandler)
 		r.Post("/login", controller.LoginHandler)
-		
+		r.Post("/forgot-password", controller.ForgotPasswordHandler)
+		r.Get("/reset-password-email", controller.ResetPasswordEmail)
+		r.Post("/reset-password", controller.ResetPasswordHandler)
 	})
 
 	r.Route("/user", func(r chi.Router) {

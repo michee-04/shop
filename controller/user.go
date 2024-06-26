@@ -121,6 +121,12 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user, err := model.GetUserByEmail(loginReq.Email)
+
+	if !user.EmailVerified {
+		http.Error(w, "Email not verified", http.StatusUnauthorized)
+		return
+	}
+
 	if err != nil || !utils.CheckPassordHash(loginReq.Password, user.Password) {
 		http.Error(w, "Invalid email or password", http.StatusUnauthorized)
 		return
@@ -183,4 +189,74 @@ func VerifyHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", "text/html")
 	w.WriteHeader(http.StatusOK)
 	tmpl.Execute(w, nil)
+}
+
+func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Email string `json:"email"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid input", http.StatusBadRequest)
+		return
+	}
+
+	var user model.User
+	if err := model.Db.Where("email = ?", req.Email).First(&user).Error; err != nil {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+
+	if err := user.GeneratePasswordToken(); err != nil {
+		http.Error(w, "Failed to generate reset token", http.StatusInternalServerError)
+		return
+	}
+
+	email.SendResetPasswordAccoubt(&user)
+
+	tmpl := template.Must(template.ParseFiles("/home/michee/go_project/E-commerce/template/emailPassword.tmpl"))
+
+	utils.RespondWithJSON(w, http.StatusOK, "Veuillez verifier votre email pour la reinitialisation du mot de passe", nil)
+
+	tmpl.Execute(w, nil)
+}
+
+func ResetPasswordEmail(w http.ResponseWriter, r *http.Request) {
+	// Parse le fichier HTML
+	tmpl := template.Must(template.ParseFiles("/home/michee/go_project/E-commerce/template/emailPassword.tmpl"))
+
+	// Définir le content-type à text/html
+	w.Header().Set("Content-Type", "text/html")
+	w.WriteHeader(http.StatusOK)
+
+	// Exécuter le template avec une structure de données vide
+	tmpl.Execute(w, nil)
+}
+
+func ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Token       string `json:"token"`
+		NewPassword string `json:"newPassword"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid input", http.StatusBadRequest)
+		return
+	}
+
+	user, err := model.FindUserByToken(req.Token)
+	if err != nil {
+		http.Error(w, "Invalid or expired reset token", http.StatusUnauthorized)
+		return
+	}
+
+	if err := user.UpdatePassword(req.NewPassword); err != nil {
+		http.Error(w, "Failed to update password", http.StatusInternalServerError)
+		return
+	}
+
+
+	res, _ := json.Marshal(user)
+	w.Header().Set("content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(res)
+	w.Write([]byte(`{"message": "Password updated successfully"}`))
 }

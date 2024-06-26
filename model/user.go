@@ -21,12 +21,11 @@ type User struct {
 	EmailVerified     bool      `gorm:"column:email_verified" json:"email_verified"`
 	Password          string    `gorm:"column:password" json:"password"`
 	IsAdmin           bool      `gorm:"column:is_admin" json:"is_admin"`
-	TokenJwt             string    `gorm:"column:token_jwt" json:"token_jwt"`
+	TokenJwt          string    `gorm:"column:token_jwt" json:"token_jwt"`
 	VerificationToken string    `gorm:"column:verification_token" json:"verification_token"`
 	TokenPassword     string    `gorm:"column:token_password" json:"token_password"`
 	ResetTokenExpiry  time.Time `gorm:"column:reset_token_expiry" json:"reset_token_expiry"`
 }
-
 
 func init() {
 	database.ConnectDB()
@@ -41,7 +40,6 @@ func init() {
 		panic("DB connection is nil")
 	}
 }
-
 
 func (u *User) CreateUser() *User {
 	u.UserId = uuid.New().String()
@@ -107,4 +105,24 @@ func (u *User) Verify() error {
 	}
 
 	return nil
+}
+
+func (u *User) GeneratePasswordToken() error {
+	token := uuid.New().String()
+	u.TokenPassword = token
+	u.ResetTokenExpiry = time.Now().Add(1 * time.Hour)
+	return Db.Save(u).Error
+}
+
+func (u *User) UpdatePassword(newPassword string) error {
+	hashedPassword, err := utils.HashPassword(newPassword)
+	if err != nil {
+		return err
+	}
+	u.Password = hashedPassword
+	u.TokenPassword = ""
+	u.ResetTokenExpiry = time.Time{}
+	fmt.Println("New hashed password:", hashedPassword)
+
+	return Db.Save(&u).Error
 }
