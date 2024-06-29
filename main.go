@@ -28,6 +28,8 @@ func main() {
 	r.Route("/auth", func(r chi.Router) {
 		r.Post("/register", controller.CreateUser)
 		r.Get("/verify", controller.VerifyHandler)
+		r.Get("/google/login", controller.GoogleLogin)
+		r.Get("/google/callback", controller.GoogleCallback)
 		r.Post("/login", controller.LoginHandler)
 		r.Post("/forgot-password", controller.ForgotPasswordHandler)
 		r.Get("/reset-password-email", controller.ResetPasswordEmail)
