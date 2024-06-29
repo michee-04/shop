@@ -97,6 +97,26 @@ func FindUserByToken(token string) (*User, error) {
 	return &u, nil
 }
 
+func FindUserPasswordToken(token string) (*User, error) {
+	var u User
+	if err := Db.Where("token_password = ?", token).First(&u).Error; err != nil {
+		fmt.Println("Error finding user by token:", err)
+		return nil, fmt.Errorf("token password not found")
+	}
+	// Journaliser les valeurs du token et de l'expiration
+	fmt.Println("Token found:", u.TokenPassword)
+	fmt.Println("Token expiry time:", u.ResetTokenExpiry)
+	fmt.Println("Current time:", time.Now())
+	
+	// Vérifiez si le token a expiré
+	if time.Now().After(u.ResetTokenExpiry) {
+		return nil, fmt.Errorf("reset token has expired")
+	}
+	return &u, nil
+}
+
+
+
 func (u *User) Verify() error {
 	u.EmailVerified = true
 	u.VerificationToken = ""
@@ -111,18 +131,35 @@ func (u *User) GeneratePasswordToken() error {
 	token := uuid.New().String()
 	u.TokenPassword = token
 	u.ResetTokenExpiry = time.Now().Add(1 * time.Hour)
+	fmt.Println("Generated token:", token)
+	fmt.Println("Token expiry time:", u.ResetTokenExpiry)
 	return Db.Save(u).Error
 }
+
+
 
 func (u *User) UpdatePassword(newPassword string) error {
 	hashedPassword, err := utils.HashPassword(newPassword)
 	if err != nil {
 		return err
 	}
-	u.Password = hashedPassword
-	u.TokenPassword = ""
-	u.ResetTokenExpiry = time.Time{}
-	fmt.Println("New hashed password:", hashedPassword)
 
-	return Db.Save(&u).Error
+	err = Db.Transaction(func(tx *gorm.DB) error {
+		u.Password = hashedPassword
+		u.TokenPassword = ""
+		u.ResetTokenExpiry = time.Time{}
+
+		if err := tx.Save(&u).Error; err != nil {
+			return err
+		}
+		return nil
+	})
+
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("New hased Password: ", hashedPassword)
+	return nil
 }
+
