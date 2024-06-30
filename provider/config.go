@@ -25,6 +25,7 @@ func SetConfigAouth() *oauth2.Config {
 		Scopes: []string{
 			"https://www.googleapis.com/auth/userinfo.email",
 			"https://www.googleapis.com/auth/userinfo.profile",
+			"openid",
 		},
 		Endpoint: google.Endpoint,
 	}

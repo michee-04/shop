@@ -20,6 +20,12 @@ import (
 func CreateUser(w http.ResponseWriter, r *http.Request) {
 	user := model.User{}
 	utils.ParseBody(r, &user)
+
+	hashedPassword, _ := utils.HashPassword(user.Password)
+	emailToken := utils.GenerateVerificationToken()
+	user.Password = hashedPassword
+	user.Email = emailToken
+	
 	u := user.CreateUser()
 
 	email.SendVerificationAccount(&user)
@@ -130,6 +136,11 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	if !user.EmailVerified {
 		http.Error(w, "Email not verified", http.StatusUnauthorized)
+		return
+	}
+
+	if user.LoginGoogle {
+		http.Error(w, "Please log in using Google", http.StatusUnauthorized)
 		return
 	}
 
