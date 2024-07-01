@@ -21,7 +21,7 @@ type User struct {
 	EmailVerified     bool      `gorm:"column:email_verified" json:"email_verified"`
 	Password          string    `gorm:"column:password" json:"password"`
 	IsAdmin           bool      `gorm:"column:is_admin" json:"is_admin"`
-	LoginGoogle bool `gorm:"column:login_google" json:"login_google"`
+	LoginGoogle       bool      `gorm:"column:login_google" json:"login_google"`
 	TokenJwt          string    `gorm:"column:token_jwt" json:"token_jwt"`
 	VerificationToken string    `gorm:"column:verification_token" json:"verification_token"`
 	TokenPassword     string    `gorm:"column:token_password" json:"token_password"`
@@ -108,15 +108,13 @@ func FindUserPasswordToken(token string) (*User, error) {
 	fmt.Println("Token found:", u.TokenPassword)
 	fmt.Println("Token expiry time:", u.ResetTokenExpiry)
 	fmt.Println("Current time:", time.Now())
-	
+
 	// Vérifiez si le token a expiré
 	if time.Now().After(u.ResetTokenExpiry) {
 		return nil, fmt.Errorf("reset token has expired")
 	}
 	return &u, nil
 }
-
-
 
 func (u *User) Verify() error {
 	u.EmailVerified = true
@@ -136,8 +134,6 @@ func (u *User) GeneratePasswordToken() error {
 	fmt.Println("Token expiry time:", u.ResetTokenExpiry)
 	return Db.Save(u).Error
 }
-
-
 
 func (u *User) UpdatePassword(newPassword string) error {
 	hashedPassword, err := utils.HashPassword(newPassword)
@@ -163,4 +159,3 @@ func (u *User) UpdatePassword(newPassword string) error {
 	fmt.Println("New hased Password: ", hashedPassword)
 	return nil
 }
-

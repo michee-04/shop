@@ -8,11 +8,10 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/michee/e-commerce/controller"
+	"github.com/michee/e-commerce/provider"
 )
 
-
 const Port = ":8080"
-
 
 var tokenAuth *jwtauth.JWTAuth
 
@@ -36,9 +35,10 @@ func main() {
 		r.Post("/reset-password", controller.ResetPasswordHandler)
 	})
 
+	r.Use(jwtauth.Verifier(tokenAuth))
+	r.Use(jwtauth.Authenticator(tokenAuth))
+
 	r.Route("/user", func(r chi.Router) {
-		r.Use(jwtauth.Verifier(tokenAuth))
-		r.Use(jwtauth.Authenticator(tokenAuth))
 
 		r.Get("/", controller.GetUser)
 
@@ -50,8 +50,30 @@ func main() {
 		})
 	})
 
-	fmt.Printf("le serveur fonctionne sur http://localhost%s", Port)
+	r.Route("/hero", func(r chi.Router) {
 
+		r.With(provider.AdminOnly).Post("/", controller.CreateHero)
+		r.Get("/", controller.GetHero)
+
+		r.Route("/{heroId}", func(r chi.Router) {
+			r.Get("/", controller.GetHeroById)
+			r.With(provider.AdminOnly).Patch("/", controller.UpdateHero)
+			r.With(provider.AdminOnly).Delete("/", controller.DeleteHero)
+		})
+	})
+
+	r.Route("/banner", func(r chi.Router) {
+		r.With(provider.AdminOnly).Post("/", controller.CreateBanner)
+		r.Get("/", controller.GetBanner)
+
+		r.Route("/{bannerId}", func(r chi.Router) {
+			r.Get("/", controller.GetBannerById)
+			r.With(provider.AdminOnly).Patch("/", controller.UpdateBanner)
+			r.With(provider.AdminOnly).Delete("/", controller.DeleteBanner)
+		})
+	})
+
+	fmt.Printf("le serveur fonctionne sur http://localhost%s", Port)
 
 	http.ListenAndServe(Port, r)
 }
