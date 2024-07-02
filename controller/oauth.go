@@ -86,7 +86,6 @@ func GoogleCallback(w http.ResponseWriter, r *http.Request) {
 			EmailVerified: googleUser.VerifiedEmail,
 			Name:          googleUser.Name,
 			Username:      googleUser.GivenName,
-			LoginGoogle:   true,
 		}
 		user.CreateUser()
 	}

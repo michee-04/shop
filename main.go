@@ -8,6 +8,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/michee/e-commerce/controller"
+	"github.com/michee/e-commerce/model"
 	"github.com/michee/e-commerce/provider"
 )
 
@@ -16,6 +17,10 @@ const Port = ":8080"
 var tokenAuth *jwtauth.JWTAuth
 
 func main() {
+
+	model.InitArticle()
+	model.InitCategroie()
+
 	tokenAuth = jwtauth.New("HS256", []byte("ksQD5adHXZ-5SSJCupcHwBzDi6q5kfr5hdU7Eq5tMmo"), nil)
 
 	r := chi.NewRouter()
@@ -33,10 +38,8 @@ func main() {
 		r.Post("/forgot-password", controller.ForgotPasswordHandler)
 		r.Get("/reset-password-email", controller.ResetPasswordEmail)
 		r.Post("/reset-password", controller.ResetPasswordHandler)
+		r.Patch("/set-password", controller.SetPasswordHandler)
 	})
-
-	r.Use(jwtauth.Verifier(tokenAuth))
-	r.Use(jwtauth.Authenticator(tokenAuth))
 
 	r.Route("/user", func(r chi.Router) {
 
@@ -50,7 +53,40 @@ func main() {
 		})
 	})
 
+	r.Route("/categorie", func(r chi.Router) {
+
+		r.Use(jwtauth.Verifier(tokenAuth))
+		r.Use(jwtauth.Authenticator(tokenAuth))
+
+		r.With(provider.AdminOnly).Post("/", controller.CreateCategorie)
+		r.Get("/", controller.GetArticle)
+
+		r.Route("/{categorieId}", func(r chi.Router) {
+			r.Get("/", controller.GetCategorieId)
+			r.With(provider.AdminOnly).Patch("/", controller.UpdateCategorie)
+			r.With(provider.AdminOnly).Delete("/", controller.DeleteCategorie)
+		})
+	})
+
+	r.Route("/article", func(r chi.Router) {
+
+		r.Use(jwtauth.Verifier(tokenAuth))
+		r.Use(jwtauth.Authenticator(tokenAuth))
+
+		r.With(provider.AdminOnly).Post("/", controller.CreateArticle)
+		r.Get("/", controller.GetArticle)
+
+		r.Route("/{articleId}", func(r chi.Router) {
+			r.Get("/", controller.GetArticleId)
+			r.With(provider.AdminOnly).Patch("/", controller.UpdateArticle)
+			r.With(provider.AdminOnly).Delete("/", controller.DeleteArticle)
+		})
+	})
+
 	r.Route("/hero", func(r chi.Router) {
+
+		r.Use(jwtauth.Verifier(tokenAuth))
+		r.Use(jwtauth.Authenticator(tokenAuth))
 
 		r.With(provider.AdminOnly).Post("/", controller.CreateHero)
 		r.Get("/", controller.GetHero)
@@ -63,6 +99,10 @@ func main() {
 	})
 
 	r.Route("/banner", func(r chi.Router) {
+
+		r.Use(jwtauth.Verifier(tokenAuth))
+		r.Use(jwtauth.Authenticator(tokenAuth))
+
 		r.With(provider.AdminOnly).Post("/", controller.CreateBanner)
 		r.Get("/", controller.GetBanner)
 

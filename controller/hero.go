@@ -86,8 +86,6 @@ func UpdateHero(w http.ResponseWriter, r *http.Request) {
 func DeleteHero(w http.ResponseWriter, r *http.Request) {
 	heroId := chi.URLParam(r, "heroId")
 	h := model.DeleteHero(heroId)
-	res, _ := json.Marshal(h)
-	w.Header().Set("content-type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(res)
+	
+	utils.RespondWithJSON(w, http.StatusOK, "Delete hero successuful", h)
 }

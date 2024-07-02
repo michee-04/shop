@@ -21,20 +21,22 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	user := model.User{}
 	utils.ParseBody(r, &user)
 
+	// Hashage du mot de passe et génération du jeton de vérification
 	hashedPassword, _ := utils.HashPassword(user.Password)
 	emailToken := utils.GenerateVerificationToken()
 	user.Password = hashedPassword
-	user.Email = emailToken
-	
-	u := user.CreateUser()
+	user.VerificationToken = emailToken
 
-	email.SendVerificationAccount(&user)
+	u := user.CreateUser()
+	email.SendVerificationAccount(u)
 
 	res, _ := json.Marshal(u)
 	w.Header().Set("content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(res)
 }
+
+
 
 func GetUser(w http.ResponseWriter, r *http.Request) {
 	u := model.GetUser()
@@ -133,15 +135,11 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user, err := model.GetUserByEmail(loginReq.Email)
-
-	if !user.EmailVerified {
-		http.Error(w, "Email not verified", http.StatusUnauthorized)
-		return
-	}
-
-	if user.LoginGoogle {
-		http.Error(w, "Please log in using Google", http.StatusUnauthorized)
-		return
+	// Vérifie si l'utilisateur n'a pas de mot de passe défini
+	if user.Password == "" {
+		// http.Redirect(w, r, "/set-password", http.StatusSeeOther)
+		// return
+		utils.RespondWithJSON(w, http.StatusOK, "Add password", nil)
 	}
 
 	if err != nil || !utils.CheckPassordHash(loginReq.Password, user.Password) {
@@ -156,7 +154,6 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user.TokenJwt = token
-	// Mettre à jour le modèle User dans la base de données avec le nouveau token
 	model.Db.Save(&user)
 
 	utils.RespondWithJSON(w, http.StatusOK, "Login successful", map[string]string{"token": token})
@@ -248,46 +245,99 @@ func ResetPasswordEmail(w http.ResponseWriter, r *http.Request) {
 
 func ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	var req struct {
-			TokenPassword string `json:"tokenPassword"`
-			Password      string `json:"password"`
+		TokenPassword string `json:"tokenPassword"`
+		Password      string `json:"password"`
 	}
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-			http.Error(w, "Invalid request", http.StatusBadRequest)
-			return
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
 	}
 	fmt.Println("Received body:", string(body))
 
 	if err := json.Unmarshal(body, &req); err != nil {
-			http.Error(w, "Invalid request", http.StatusBadRequest)
-			return
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
 	}
 
 	fmt.Println("Received tokenPassword:", req.TokenPassword)
 
 	user, err := model.FindUserPasswordToken(req.TokenPassword)
 	if err != nil {
-			if err.Error() == "reset token has expired" {
-					http.Error(w, "Reset token has expired", http.StatusUnauthorized)
-			} else {
-					http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
-			}
-			return
+		if err.Error() == "reset token has expired" {
+			http.Error(w, "Reset token has expired", http.StatusUnauthorized)
+		} else {
+			http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
+		}
+		return
 	}
 
 	if user.TokenPassword != req.TokenPassword {
-			http.Error(w, "Invalid reset token", http.StatusUnauthorized)
-			return
+		http.Error(w, "Invalid reset token", http.StatusUnauthorized)
+		return
 	}
 
 	err = user.UpdatePassword(req.Password)
 	if err != nil {
-			http.Error(w, "Failed to update password", http.StatusInternalServerError)
-			return
+		http.Error(w, "Failed to update password", http.StatusInternalServerError)
+		return
 	}
 
 	utils.RespondWithJSON(w, http.StatusOK, "Password updated successfully", nil)
 }
 
+func SetPasswordHandler(w http.ResponseWriter, r *http.Request) {
+	// Récupère l'email depuis le header ou les paramètres de la requête
+	email := r.Header.Get("X-User-Email")
+	if email == "" {
+		email = chi.URLParam(r, "email")
+		if email == "" {
+			http.Error(w, "Email not provided", http.StatusBadRequest)
+			return
+		}
+	}
 
+	var req struct {
+		Password string `json:"password"`
+	}
+
+	// Parse le corps de la requête pour obtenir le mot de passe
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid input", http.StatusBadRequest)
+		return
+	}
+
+	// Recherche l'utilisateur par email
+	user, err := model.GetUserByEmail(email)
+	if err != nil {
+		if err.Error() == "user not found" {
+			http.Error(w, "User not found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, "Database query failed", http.StatusInternalServerError)
+		return
+	}
+
+	// Vérifie si l'utilisateur n'a pas de mot de passe
+	if user.Password != "" {
+		http.Error(w, "Password already set", http.StatusBadRequest)
+		return
+	}
+
+	// Hache le nouveau mot de passe
+	hashedPassword, err := utils.HashPassword(req.Password)
+	if err != nil {
+		http.Error(w, "Failed to hash password", http.StatusInternalServerError)
+		return
+	}
+
+	// Met à jour le mot de passe de l'utilisateur
+	user.Password = hashedPassword
+	if err := model.Db.Save(&user).Error; err != nil {
+		http.Error(w, "Failed to update password", http.StatusInternalServerError)
+		return
+	}
+
+	utils.RespondWithJSON(w, http.StatusOK, "Password set successfully", nil)
+}

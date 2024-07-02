@@ -18,10 +18,9 @@ type User struct {
 	Name              string    `gorm:"column:name" json:"name"`
 	Username          string    `gorm:"column:username" json:"username"`
 	Email             string    `gorm:"unique:column:email" json:"email"`
-	EmailVerified     bool      `gorm:"column:email_verified" json:"email_verified"`
 	Password          string    `gorm:"column:password" json:"password"`
 	IsAdmin           bool      `gorm:"column:is_admin" json:"is_admin"`
-	LoginGoogle       bool      `gorm:"column:login_google" json:"login_google"`
+	EmailVerified     bool      `gorm:"column:email_verified" json:"email_verified"`
 	TokenJwt          string    `gorm:"column:token_jwt" json:"token_jwt"`
 	VerificationToken string    `gorm:"column:verification_token" json:"verification_token"`
 	TokenPassword     string    `gorm:"column:token_password" json:"token_password"`
@@ -31,7 +30,7 @@ type User struct {
 func init() {
 	database.ConnectDB()
 	Db = database.GetDB()
-	// Db.Migrator().DropTable(&User{})
+	Db.Migrator().DropTable(&User{})
 	if Db != nil {
 		err := Db.AutoMigrate(&User{})
 		if err != nil {
@@ -44,10 +43,6 @@ func init() {
 
 func (u *User) CreateUser() *User {
 	u.UserId = uuid.New().String()
-	// hashedPassword, _ := utils.HashPassword(u.Password)
-	// emailToken := utils.GenerateVerificationToken()
-	// u.Password = hashedPassword
-	// u.VerificationToken = emailToken
 	Db.Create(u)
 	return u
 }

@@ -17,7 +17,7 @@ type Hero struct {
 func init(){
 	database.ConnectDB()
 	Db = database.GetDB()
-	Db.Migrator().DropTable(&Hero{})
+	// Db.Migrator().DropTable(&Hero{})
 	if Db != nil {
 		err := Db.AutoMigrate(&Hero{})
 		if err != nil {

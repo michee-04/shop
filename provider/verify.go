@@ -53,7 +53,7 @@ func AdminOnly(next http.Handler) http.Handler {
 			return
 		}
 
-		isAdmin, ok := claims["isAdmin"].(bool)
+		isAdmin, ok := claims["is_admin"].(bool)
 		if !ok || !isAdmin {
 			http.Error(w, "You are not an administrator", http.StatusForbidden)
 			return

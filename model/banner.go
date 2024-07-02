@@ -15,7 +15,7 @@ type Banner struct {
 func init() {
 	database.ConnectDB()
 	Db = database.GetDB()
-	Db.Migrator().DropTable(&Banner{})
+	// Db.Migrator().DropTable(&Banner{})
 	if Db != nil {
 		err := Db.AutoMigrate(&Banner{})
 		if err != nil {

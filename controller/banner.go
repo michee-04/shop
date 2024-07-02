@@ -85,8 +85,6 @@ func UpdateBanner(w http.ResponseWriter, r *http.Request) {
 func DeleteBanner(w http.ResponseWriter, r *http.Request) {
 	bannerId := chi.URLParam(r, "bannerId")
 	b := model.DeleteBanner(bannerId)
-	res, _ := json.Marshal(b)
-	w.Header().Set("content-type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(res)
+	
+	utils.RespondWithJSON(w, http.StatusOK, "Delete Banner successuful", b)
 }

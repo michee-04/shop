@@ -16,21 +16,21 @@ type Article struct {
 	Categorie   Categorie `gorm:"foreignKey:categorie_id" json:"-"`
 }
 
-func init() {
+func InitArticle() {
 	database.ConnectDB()
 	Db = database.GetDB()
-	Db.Migrator().DropTable(&Article{})
+	// Db.Migrator().DropTable(&Article{})
 	if Db != nil {
 		err := Db.AutoMigrate(&Article{})
 		if err != nil {
-			panic("Failed to igrate Banner Model: " + err.Error())
+			panic("Failed to migrate Article Model: " + err.Error())
 		}
 	} else {
 		panic("DB connection is nil")
 	}
 }
 
-func (a *Article) CreateBanner() *Article {
+func (a *Article) CreateArticle() *Article {
 	a.ArticleId = uuid.New().String()
 	Db.Create(a)
 	return a
