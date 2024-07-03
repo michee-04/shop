@@ -7,27 +7,29 @@ import (
 )
 
 type Article struct {
-	ArticleId   string    `gorm:"primary_key; column:article_id"`
+	ArticleId   string    `gorm:"primary_key;column:article_id"`
 	Title       string    `gorm:"column:title" json:"title"`
 	Description string    `gorm:"column:description" json:"description"`
 	Color       string    `gorm:"column:color" json:"color"`
 	Size        string    `gorm:"column:size" json:"size"`
 	CategorieId string    `gorm:"column:categorie_id" json:"categorie_id"`
-	Categorie   Categorie `gorm:"foreignKey:categorie_id" json:"-"`
+	Categorie   Categorie `gorm:"foreignKey:CategorieId;constraint:OnDelete:CASCADE;" json:"-"`
 }
 
-func InitArticle() {
+
+func init() {
 	database.ConnectDB()
 	Db = database.GetDB()
 	// Db.Migrator().DropTable(&Article{})
 	if Db != nil {
 		err := Db.AutoMigrate(&Article{})
 		if err != nil {
-			panic("Failed to migrate Article Model: " + err.Error())
+			panic("Failed to migrate Article model: " + err.Error())
 		}
 	} else {
 		panic("DB connection is nil")
 	}
+	
 }
 
 func (a *Article) CreateArticle() *Article {
@@ -44,7 +46,7 @@ func GetArticle() []Article {
 
 func GetArticleById(Id string) (*Article, *gorm.DB) {
 	var a Article
-	db := Db.Preload("Categorie").Where("article_id=?", Id).First(&a)
+	db := Db.Preload("Categorie").Where("article_id = ?", Id).First(&a)
 	if db.Error != nil {
 		return nil, db
 	}
@@ -54,6 +56,6 @@ func GetArticleById(Id string) (*Article, *gorm.DB) {
 
 func DeleteArticle(Id string) Article {
 	var a Article
-	Db.Where("article_id=?", Id).Delete(&a)
+	Db.Where("article_id = ?", Id).Delete(&a)
 	return a
 }

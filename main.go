@@ -8,7 +8,6 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/michee/e-commerce/controller"
-	"github.com/michee/e-commerce/model"
 	"github.com/michee/e-commerce/provider"
 )
 
@@ -18,8 +17,8 @@ var tokenAuth *jwtauth.JWTAuth
 
 func main() {
 
-	model.InitArticle()
-	model.InitCategroie()
+	// model.InitArticle()
+	// model.InitCategroie()
 
 	tokenAuth = jwtauth.New("HS256", []byte("ksQD5adHXZ-5SSJCupcHwBzDi6q5kfr5hdU7Eq5tMmo"), nil)
 
@@ -42,12 +41,14 @@ func main() {
 	})
 
 	r.Route("/user", func(r chi.Router) {
-
 		r.Get("/", controller.GetUser)
+		r.Get("/{userId}", controller.GetUserById)
 
 		r.Route("/{userId}", func(r chi.Router) {
+			r.Use(jwtauth.Verifier(tokenAuth))
+			r.Use(jwtauth.Authenticator(tokenAuth))
+
 			r.Post("/", controller.LogoutUser)
-			r.Get("/", controller.GetUserById)
 			r.Patch("/", controller.UpddateUser)
 			r.Delete("/", controller.DeleteUser)
 		})

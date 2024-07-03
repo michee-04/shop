@@ -21,7 +21,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	user := model.User{}
 	utils.ParseBody(r, &user)
 
-	// Hashage du mot de passe et génération du jeton de vérification
+
 	hashedPassword, _ := utils.HashPassword(user.Password)
 	emailToken := utils.GenerateVerificationToken()
 	user.Password = hashedPassword
@@ -61,9 +61,10 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	res, _ := json.Marshal(u)
 	w.Header().Set("content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write(res)
 
 	utils.RespondWithJSON(w, http.StatusOK, "Delete user successful", map[string]string{"token": string(res)})
+	
+	w.Write(res)
 }
 
 func UpddateUser(w http.ResponseWriter, r *http.Request) {
@@ -135,11 +136,9 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user, err := model.GetUserByEmail(loginReq.Email)
-	// Vérifie si l'utilisateur n'a pas de mot de passe défini
 	if user.Password == "" {
-		// http.Redirect(w, r, "/set-password", http.StatusSeeOther)
-		// return
 		utils.RespondWithJSON(w, http.StatusOK, "Add password", nil)
+		return
 	}
 
 	if err != nil || !utils.CheckPassordHash(loginReq.Password, user.Password) {

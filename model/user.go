@@ -17,7 +17,7 @@ type User struct {
 	UserId            string    `gorm:"primary_key;column:user_id"`
 	Name              string    `gorm:"column:name" json:"name"`
 	Username          string    `gorm:"column:username" json:"username"`
-	Email             string    `gorm:"unique:column:email" json:"email"`
+	Email             string    `gorm:"unique;column:email" json:"email"`
 	Password          string    `gorm:"column:password" json:"password"`
 	IsAdmin           bool      `gorm:"column:is_admin" json:"is_admin"`
 	EmailVerified     bool      `gorm:"column:email_verified" json:"email_verified"`
@@ -30,7 +30,7 @@ type User struct {
 func init() {
 	database.ConnectDB()
 	Db = database.GetDB()
-	Db.Migrator().DropTable(&User{})
+	// Db.Migrator().DropTable(&User{})
 	if Db != nil {
 		err := Db.AutoMigrate(&User{})
 		if err != nil {
@@ -43,6 +43,8 @@ func init() {
 
 func (u *User) CreateUser() *User {
 	u.UserId = uuid.New().String()
+	admin := u.IsAdmin
+	u.IsAdmin = admin
 	Db.Create(u)
 	return u
 }
@@ -67,7 +69,7 @@ func GetUserByEmail(email string) (*User, error) {
 	var u User
 	if err := Db.Where("email = ?", email).First(&u).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errors.New("user not found")
+			return nil, nil
 		}
 		return nil, err
 	}
@@ -99,10 +101,6 @@ func FindUserPasswordToken(token string) (*User, error) {
 		fmt.Println("Error finding user by token:", err)
 		return nil, fmt.Errorf("token password not found")
 	}
-	// Journaliser les valeurs du token et de l'expiration
-	fmt.Println("Token found:", u.TokenPassword)
-	fmt.Println("Token expiry time:", u.ResetTokenExpiry)
-	fmt.Println("Current time:", time.Now())
 
 	// Vérifiez si le token a expiré
 	if time.Now().After(u.ResetTokenExpiry) {

@@ -24,8 +24,6 @@ func VerificationToken(r *http.Request, userId string) bool {
 		return false // le token n'a pas le préfixe "Bearer "
 	}
 
-	log.Printf("Extracted token from header: %s\n", tokenFromHeader)
-
 	// Récupérer l'utilisateur depuis la base de données
 	userDetail, _ := model.GetUserById(userId)
 	if userDetail == nil {
@@ -34,8 +32,6 @@ func VerificationToken(r *http.Request, userId string) bool {
 	}
 
 	// Comparer le token
-	log.Printf("Token from header: %s\n", tokenFromHeader)
-	log.Printf("Token from database: %s\n", userDetail.TokenJwt)
 	if tokenFromHeader != userDetail.TokenJwt {
 		log.Println("Tokens do not match")
 		return false
@@ -53,7 +49,7 @@ func AdminOnly(next http.Handler) http.Handler {
 			return
 		}
 
-		isAdmin, ok := claims["is_admin"].(bool)
+		isAdmin, ok := claims["isAdmin"].(bool)
 		if !ok || !isAdmin {
 			http.Error(w, "You are not an administrator", http.StatusForbidden)
 			return

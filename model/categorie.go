@@ -7,15 +7,17 @@ import (
 )
 
 type Categorie struct {
-	CategorieId string    `gorm:"primary_key; column:categorie_id"`
+	CategorieId string    `gorm:"primary_key;column:categorie_id"`
 	Title       string    `gorm:"column:title" json:"title"`
-	Article     []Article `gorm:"foreignKey:categorie_id; constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	Articles    []Article `gorm:"foreignKey:CategorieId;constraint:OnDelete:CASCADE;" json:"-"`
 }
+
+
 
 func InitCategroie() {
 	database.ConnectDB()
 	Db = database.GetDB()
-	// Db.Migrator().DropTable()
+	// Db.Migrator().DropTable(&Categorie{})
 	if Db != nil {
 		err := Db.AutoMigrate(&Categorie{})
 		if err != nil {
@@ -34,13 +36,13 @@ func (c *Categorie) CreateCategorie() *Categorie {
 
 func GetCategorie() []Categorie {
 	var c []Categorie
-	Db.Find(&c)
+	Db.Preload("Articles").Find(&c)
 	return c
 }
 
-func GetCategorieId(Id string) (*Categorie, *gorm.DB) {
+func GetCategorieById(Id string) (*Categorie, *gorm.DB) {
 	var c Categorie
-	db := Db.Where("categorie_id=?", Id).First(&c)
+	db := Db.Preload("Articles").Where("categorie_id = ?", Id).First(&c)
 	if db.Error != nil {
 		return nil, db
 	}
@@ -50,6 +52,6 @@ func GetCategorieId(Id string) (*Categorie, *gorm.DB) {
 
 func DeleteCategorie(Id string) Categorie {
 	var c Categorie
-	Db.Where("categorie_id=?", Id).Delete(&c)
+	Db.Where("categorie_id = ?", Id).Delete(&c)
 	return c
 }

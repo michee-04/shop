@@ -31,7 +31,7 @@ func GetCategorie(w http.ResponseWriter, r *http.Request) {
 
 func GetCategorieId(w http.ResponseWriter, r *http.Request) {
 	categorieId := chi.URLParam(r, "categorieId")
-	c, _ := model.GetCategorieId(categorieId)
+	c, _ := model.GetCategorieById(categorieId)
 	res, _ := json.Marshal(c)
 	w.Header().Set("content-type", "application/json")
 	w.WriteHeader(http.StatusOK)
