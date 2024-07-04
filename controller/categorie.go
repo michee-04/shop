@@ -13,7 +13,7 @@ import (
 
 func CreateCategorie(w http.ResponseWriter, r *http.Request) {
 	categorie := model.Categorie{}
-	utils.ParseBody(r, categorie)
+	utils.ParseBody(r, &categorie)
 	c := categorie.CreateCategorie()
 	res, _ := json.Marshal(c)
 	w.Header().Set("content-type", "application/json")

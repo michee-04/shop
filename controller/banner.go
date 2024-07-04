@@ -14,7 +14,7 @@ import (
 
 func CreateBanner(w http.ResponseWriter, r *http.Request) {
 	banner := model.Banner{}
-	utils.ParseBody(r, banner)
+	utils.ParseBody(r, &banner)
 	b := banner.CreateBanner()
 	res, _ := json.Marshal(b)
 	w.Header().Set("content-type", "application/json")
@@ -47,7 +47,7 @@ func UpdateBanner(w http.ResponseWriter, r *http.Request) {
 
 	var b model.Banner
 	err := model.Db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Where("hero_id=?", bannerId).First(&b).Error; err != nil {
+		if err := tx.Where("banner_id=?", bannerId).First(&b).Error; err != nil {
 			return err
 		}
 

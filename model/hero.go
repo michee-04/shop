@@ -30,7 +30,7 @@ func init(){
 
 func (h *Hero) CreateHero() *Hero {
 	h.HeroId = uuid.New().String()
-	Db.Create(h)
+	Db.Create(&h)
 	return h
 }
 

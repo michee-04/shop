@@ -13,7 +13,7 @@ import (
 
 func CreateHero(w http.ResponseWriter, r *http.Request) {
 	hero := model.Hero{}
-	utils.ParseBody(r, hero)
+	utils.ParseBody(r, &hero)
 	h := hero.CreateHero()
 	res, _ := json.Marshal(h)
 	w.Header().Set("content-type", "application/json")

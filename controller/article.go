@@ -14,7 +14,7 @@ import (
 
 func CreateArticle(w http.ResponseWriter, r *http.Request) {
 	article := model.Article{}
-	utils.ParseBody(r, article)
+	utils.ParseBody(r, &article)
 	a := article.CreateArticle()
 	res, _ := json.Marshal(a)
 	w.Header().Set("content-type", "application/json")

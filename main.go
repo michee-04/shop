@@ -17,9 +17,6 @@ var tokenAuth *jwtauth.JWTAuth
 
 func main() {
 
-	// model.InitArticle()
-	// model.InitCategroie()
-
 	tokenAuth = jwtauth.New("HS256", []byte("ksQD5adHXZ-5SSJCupcHwBzDi6q5kfr5hdU7Eq5tMmo"), nil)
 
 	r := chi.NewRouter()
@@ -56,61 +53,59 @@ func main() {
 
 	r.Route("/categorie", func(r chi.Router) {
 
-		r.Use(jwtauth.Verifier(tokenAuth))
-		r.Use(jwtauth.Authenticator(tokenAuth))
+		r.Get("/", controller.GetCategorie)
+		r.Get("/{categorieId}", controller.GetCategorieId)
 
-		r.With(provider.AdminOnly).Post("/", controller.CreateCategorie)
-		r.Get("/", controller.GetArticle)
+		r.Route("/", func(r chi.Router) {
+			r.Use(jwtauth.Verifier(tokenAuth))
+			r.Use(jwtauth.Authenticator(tokenAuth))
 
-		r.Route("/{categorieId}", func(r chi.Router) {
-			r.Get("/", controller.GetCategorieId)
-			r.With(provider.AdminOnly).Patch("/", controller.UpdateCategorie)
-			r.With(provider.AdminOnly).Delete("/", controller.DeleteCategorie)
+			r.With(provider.AdminOnly).Post("/", controller.CreateCategorie)
+			r.With(provider.AdminOnly).Patch("/{categorieId}", controller.UpdateCategorie)
+			r.With(provider.AdminOnly).Delete("/{categorieId}", controller.DeleteCategorie)
 		})
 	})
 
 	r.Route("/article", func(r chi.Router) {
 
-		r.Use(jwtauth.Verifier(tokenAuth))
-		r.Use(jwtauth.Authenticator(tokenAuth))
-
-		r.With(provider.AdminOnly).Post("/", controller.CreateArticle)
 		r.Get("/", controller.GetArticle)
+		r.Get("/{articleId}", controller.GetArticleId)
 
-		r.Route("/{articleId}", func(r chi.Router) {
-			r.Get("/", controller.GetArticleId)
-			r.With(provider.AdminOnly).Patch("/", controller.UpdateArticle)
-			r.With(provider.AdminOnly).Delete("/", controller.DeleteArticle)
+		r.Route("/", func(r chi.Router) {
+			r.Use(jwtauth.Verifier(tokenAuth))
+			r.Use(jwtauth.Authenticator(tokenAuth))
+			r.With(provider.AdminOnly).Post("/", controller.CreateArticle)
+			r.With(provider.AdminOnly).Patch("/{articleId}", controller.UpdateArticle)
+			r.With(provider.AdminOnly).Delete("/{articleId}", controller.DeleteArticle)
 		})
 	})
 
 	r.Route("/hero", func(r chi.Router) {
 
-		r.Use(jwtauth.Verifier(tokenAuth))
-		r.Use(jwtauth.Authenticator(tokenAuth))
-
-		r.With(provider.AdminOnly).Post("/", controller.CreateHero)
 		r.Get("/", controller.GetHero)
+		r.Get("/{heroId}", controller.GetHeroById)
 
-		r.Route("/{heroId}", func(r chi.Router) {
-			r.Get("/", controller.GetHeroById)
-			r.With(provider.AdminOnly).Patch("/", controller.UpdateHero)
-			r.With(provider.AdminOnly).Delete("/", controller.DeleteHero)
+		r.Route("/", func(r chi.Router) {
+			r.Use(jwtauth.Verifier(tokenAuth))
+			r.Use(jwtauth.Authenticator(tokenAuth))
+			r.With(provider.AdminOnly).Post("/", controller.CreateHero)
+			r.With(provider.AdminOnly).Patch("/{heroId}", controller.UpdateHero)
+			r.With(provider.AdminOnly).Delete("/{heroId}", controller.DeleteHero)
 		})
 	})
 
 	r.Route("/banner", func(r chi.Router) {
 
-		r.Use(jwtauth.Verifier(tokenAuth))
-		r.Use(jwtauth.Authenticator(tokenAuth))
-
-		r.With(provider.AdminOnly).Post("/", controller.CreateBanner)
 		r.Get("/", controller.GetBanner)
+		r.Get("/{bannerId}", controller.GetBannerById)
 
-		r.Route("/{bannerId}", func(r chi.Router) {
-			r.Get("/", controller.GetBannerById)
-			r.With(provider.AdminOnly).Patch("/", controller.UpdateBanner)
-			r.With(provider.AdminOnly).Delete("/", controller.DeleteBanner)
+		r.Route("/", func(r chi.Router) {
+			r.Use(jwtauth.Verifier(tokenAuth))
+			r.Use(jwtauth.Authenticator(tokenAuth))
+			r.With(provider.AdminOnly).Post("/", controller.CreateBanner)
+
+			r.With(provider.AdminOnly).Patch("/{bannerId}", controller.UpdateBanner)
+			r.With(provider.AdminOnly).Delete("/{bannerId}", controller.DeleteBanner)
 		})
 	})
 

@@ -12,6 +12,7 @@ type Banner struct {
 	BgColor  string `gorm:"column:bg_color" json:"bg_color"`
 }
 
+
 func init() {
 	database.ConnectDB()
 	Db = database.GetDB()
@@ -28,7 +29,7 @@ func init() {
 
 func (b *Banner) CreateBanner() *Banner {
 	b.BannerId = uuid.New().String()
-	Db.Create(b)
+	Db.Create(&b)
 	return b
 }
 

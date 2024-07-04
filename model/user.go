@@ -15,7 +15,7 @@ var Db *gorm.DB
 
 type User struct {
 	UserId            string    `gorm:"primary_key;column:user_id"`
-	Name              string    `gorm:"column:name" json:"name"`
+	Name              string    `gorm:"unique;column:name" json:"name"`
 	Username          string    `gorm:"column:username" json:"username"`
 	Email             string    `gorm:"unique;column:email" json:"email"`
 	Password          string    `gorm:"column:password" json:"password"`
@@ -43,9 +43,7 @@ func init() {
 
 func (u *User) CreateUser() *User {
 	u.UserId = uuid.New().String()
-	admin := u.IsAdmin
-	u.IsAdmin = admin
-	Db.Create(u)
+	Db.Create(&u)
 	return u
 }
 
