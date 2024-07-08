@@ -18,14 +18,14 @@ func init(){
 	database.ConnectDB()
 	Db = database.GetDB()
 	// Db.Migrator().DropTable(&Hero{})
-	if Db != nil {
-		err := Db.AutoMigrate(&Hero{})
-		if err != nil {
-			panic("Failed to migrate hero model: "+ err.Error())
-		}
-	} else {
-		panic("DB connection is nil")
-	}
+	// if Db != nil {
+	// 	err := Db.AutoMigrate(&Hero{})
+	// 	if err != nil {
+	// 		panic("Failed to migrate hero model: "+ err.Error())
+	// 	}
+	// } else {
+	// 	panic("DB connection is nil")
+	// }
 }
 
 func (h *Hero) CreateHero() *Hero {

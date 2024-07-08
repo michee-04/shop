@@ -17,14 +17,14 @@ func init() {
 	database.ConnectDB()
 	Db = database.GetDB()
 	// Db.Migrator().DropTable(&Banner{})
-	if Db != nil {
-		err := Db.AutoMigrate(&Banner{})
-		if err != nil {
-			panic("Failed to migrate Banner model: " + err.Error())
-		}
-	} else {
-		panic("DB connection is nil")
-	}
+	// if Db != nil {
+	// 	err := Db.AutoMigrate(&Banner{})
+	// 	if err != nil {
+	// 		panic("Failed to migrate Banner model: " + err.Error())
+	// 	}
+	// } else {
+	// 	panic("DB connection is nil")
+	// }
 }
 
 func (b *Banner) CreateBanner() *Banner {

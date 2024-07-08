@@ -31,14 +31,14 @@ func init() {
 	database.ConnectDB()
 	Db = database.GetDB()
 	// Db.Migrator().DropTable(&User{})
-	if Db != nil {
-		err := Db.AutoMigrate(&User{})
-		if err != nil {
-			panic("Failed to migrate User model: " + err.Error())
-		}
-	} else {
-		panic("DB connection is nil")
-	}
+	// if Db != nil {
+	// 	err := Db.AutoMigrate(&User{})
+	// 	if err != nil {
+	// 		panic("Failed to migrate User model: " + err.Error())
+	// 	}
+	// } else {
+	// 	panic("DB connection is nil")
+	// }
 }
 
 func (u *User) CreateUser() *User {
